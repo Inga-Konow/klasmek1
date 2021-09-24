@@ -1,7 +1,8 @@
-from __future__ import annotations
+from __future__ import annotations, walrus
 import matplotlib.pyplot as plt
 import numpy as np
 from enum import Enum
+
 
 #Constants and parameters:
 
