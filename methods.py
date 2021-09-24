@@ -1,3 +1,4 @@
+from __future__ import annotations
 #Constants and parameters:
 
 v_0 = 700 #firing velocity in m/s
@@ -19,6 +20,11 @@ def RK4(f: Callable[[any], float], y:any, t:float, dt:float) -> Tuple[any, float
 	k_4 = f(y+k_3*dt, t+dt)
 	y_next = y + 1/6*(k_1+2*k_2+2*k_3+k_4)*dt
 	return y_next, t+dt
+
+def Euler(f: Callable[[any], float], y:any, t:float, dt:float) -> Tuple[any, float]:
+	k_1 = f(y, t)
+	y_next = y + k_1*dt
+	return y_next, t+dt
 	
 
 class phase(NamedTuple):
@@ -26,31 +32,36 @@ class phase(NamedTuple):
 	y: float
 	v_x: float
 	v_y: float
+
 	def __add__(self, rhs:phase):
-		return (l+r for l,r in zip(self, rhs))
+		return phase(*[l+r for l,r in zip(self, rhs)])
 	def __radd__(self, lhs:phase):
 		return self + lhs
 	def __mul__(self, rhs:float):
-		return (elem*rhs for elem in self)
+		return phase(*[l*rhs for l in self])
 	def __rmul__(self, lhs:float):
 		return self*lhs
+	def __truediv__(self, rhs:float):
+		return self*(1/rhs)
 
 
 g=9.81
 def f(ph:phase, t:float):
-	return(ph.v_x, ph.v_y, 0, -g)
+	return phase(ph.v_x, ph.v_y, 0, -g)
 
 import matplotlib.pyplot as plt	
 import numpy as np
 
 if __name__ == "__main__":
-    dt = 1e-2
-    ys = [phase(0,10,4,10)]
-    ts = [0]
-    while t<2.0:
-	    y_next, t_next=RK4(f, y, t, dt)
-	    ys.append(y_next)
-	    ts.append(t_next)
-    yvals = np.array(ys)
-    ts = np.array(ts)
-    print(yvals[:,1])
+	dt = 1e-2
+	ys = [phase(0,10,4,10)]
+	ts = [0]
+	while (t:=ts[-1])<2.0:
+		y = ys[-1]
+
+		y_next, t_next = RK4(f, y, t, dt)
+		ys.append(y_next)
+		ts.append(t_next)
+	yvals = np.array(ys)
+	ts = np.array(ts)
+	print(yvals[:,1])
