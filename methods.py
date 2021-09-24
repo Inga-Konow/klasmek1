@@ -7,6 +7,7 @@ a = 6.5e-3 #constant in adiabatic approximation?
 y_0 = 1e4 #k_B*T/mg
 alfa = 2.5 #constant for air?
 drag_coefficient = 4e-5 #per air particle mass, in m^-1#!/usr/bin/python
+
 #Sistnevnte er en bash-kommando for aa kjore resten av filen i python
 	#om filen kjores direkte fra kommandolinjen
 from typing import Callable, Tuple, NamedTuple
@@ -25,8 +26,8 @@ class phase(NamedTuple):
 	y: float
 	v_x: float
 	v_y: float
-	def __add__(self, rhs:phase)
-		return (l+r for l,r in zip(self, rhs)
+	def __add__(self, rhs:phase):
+		return (l+r for l,r in zip(self, rhs))
 	def __radd__(self, lhs:phase):
 		return self + lhs
 	def __mul__(self, rhs:float):
@@ -42,15 +43,14 @@ def f(ph:phase, t:float):
 import matplotlib.pyplot as plt	
 import numpy as np
 
- __name__ == "__main__":
-	dt = 1e-2
-	ys = [phase(0,10,4,10)]
-	ts = [0]
-	while t<2.0:
-		y_next, t_next=RK4(f, y, t, dt)
-		ys.append(y_next)
-		ts.append(t_next)
-	yvals = np.array(ys)
-	ts = np.array(ts)
-	print(yvals[:,1])
-
+if __name__ == "__main__":
+    dt = 1e-2
+    ys = [phase(0,10,4,10)]
+    ts = [0]
+    while t<2.0:
+	    y_next, t_next=RK4(f, y, t, dt)
+	    ys.append(y_next)
+	    ts.append(t_next)
+    yvals = np.array(ys)
+    ts = np.array(ts)
+    print(yvals[:,1])
