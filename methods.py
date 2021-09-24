@@ -1,3 +1,4 @@
+from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 from enum import Enum
@@ -55,10 +56,10 @@ class Phase(NamedTuple):
 	def speed(self):
 		return np.sqrt(self.v_x**2+self.v_y**2)
 
-	def __add__(self, rhs:Phase):
+	def __add__(self, rhs: Phase):
 		return Phase(*[l+r for l,r in zip(self, rhs)])
 
-	def __radd__(self, lhs:Phase):
+	def __radd__(self, lhs: Phase):
 		return self + lhs
 
 	def __mul__(self, rhs:float):
