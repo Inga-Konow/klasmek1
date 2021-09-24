@@ -1,4 +1,3 @@
-from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 from enum import Enum
@@ -20,7 +19,7 @@ y0 = 1e4
 
 # Sistnevnte er en bash-kommando for aa kjore resten av filen i python
 # om filen kjores direkte fra kommandolinjen
-from typing import Callable, Tuple, NamedTuple, Union
+from typing import Callable, Tuple, NamedTuple, Union, List
 
 
 def RK4(f: Callable[[any,float], float], y: any, t: float, dt: float) -> Tuple[any, float]:
