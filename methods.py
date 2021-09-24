@@ -1,4 +1,4 @@
-from __future__ import annotations, walrus
+from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 from enum import Enum
@@ -14,13 +14,13 @@ T0 = 288
 y_0 = 1e4  # k_B*T/mg
 alfa = 2.5  # constant for air?
 drag_coefficient = 4e-5  # per air particle mass, in m^-1#!/usr/bin/python
-g=9.81
+g = 9.81
 
 y0 = 1e4
 
 # Sistnevnte er en bash-kommando for aa kjore resten av filen i python
 # om filen kjores direkte fra kommandolinjen
-from typing import Callable, Tuple, NamedTuple
+from typing import Callable, Tuple, NamedTuple, Union
 
 
 def RK4(f: Callable[[any,float], float], y: any, t: float, dt: float) -> Tuple[any, float]:
@@ -56,10 +56,10 @@ class Phase(NamedTuple):
 	def speed(self):
 		return np.sqrt(self.v_x**2+self.v_y**2)
 
-	def __add__(self, rhs:phase):
+	def __add__(self, rhs:Phase):
 		return Phase(*[l+r for l,r in zip(self, rhs)])
 
-	def __radd__(self, lhs:phase):
+	def __radd__(self, lhs:Phase):
 		return self + lhs
 
 	def __mul__(self, rhs:float):
