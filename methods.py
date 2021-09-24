@@ -1,6 +1,7 @@
 from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
+from enum import Enum
 
 #Constants and parameters:
 
@@ -8,10 +9,13 @@ v_0 = 700  # firing velocity in m/s
 theta = 45  # firing angle in degrees
 
 a = 6.5e-3  # constant in adiabatic approximation?
+T0 = 288
 y_0 = 1e4  # k_B*T/mg
 alfa = 2.5  # constant for air?
 drag_coefficient = 4e-5  # per air particle mass, in m^-1#!/usr/bin/python
 g=9.81
+
+y0 = 1e4
 
 # Sistnevnte er en bash-kommando for aa kjore resten av filen i python
 # om filen kjores direkte fra kommandolinjen
@@ -48,6 +52,9 @@ class Phase(NamedTuple):
 	v_x: float
 	v_y: float
 
+	def speed(self):
+		return np.sqrt(self.v_x**2+self.v_y**2)
+
 	def __add__(self, rhs:phase):
 		return Phase(*[l+r for l,r in zip(self, rhs)])
 
@@ -64,26 +71,81 @@ class Phase(NamedTuple):
 		return self*(1/rhs)
 
 
-def f(ph: Phase, t: float):
+class Drag_type(Enum):
+	NODRAG = "No drag"
+	UNIFORM = "Uniform drag"
+	ISOTHERMAL = "Isothermal drag"
+	ADIABATIC = "Adiabatic drag"
+
+
+
+def phase_derivative_nodrag(ph: Phase, t: float):
+	'''Basic derivative-equation'''
 	return Phase(ph.v_x, ph.v_y, 0, -g)
 
-if __name__ == "__main__":
-	dt = 1e-2
-	phases = [Phase(0, 10, 4, 10)]
-	ts = [0]
-	while True:
-		current_phase = phases[-1]
-		t = ts[-1]
-		next_phase, t_next = RK4(f, current_phase, t, dt)
-		if (x_cross := crossing(current_phase, next_phase, 0)) is False:
-			phases.append(next_phase)
-			ts.append(t_next)
-			continue
-		print(f"CROSSED AT {x_cross=}")
-		break
+def phase_derivative_drag(ph: Phase, t: float, drag_multiplier=1):
+	'''Derivative-equation including drag'''
+	#Friction points in negative-v-direction with size B*v^2, where
+	# B/m = drag_coefficient, so the acceleration caused
+	#  by friction is given by drag_coefficient * v * (-v-vector)
+	drag_factor = drag_coefficient*ph.speed()*drag_multiplier  #
+	return Phase(ph.v_x, ph.v_y, -drag_factor*ph.v_x, -drag_factor*ph.v_y-g)
 
-	phase_array = np.array(phases)
-	ts = np.array(ts)
-	plt.figure(0)
-	plt.plot(phase_array[:,0], phase_array[:,1], label="y")
+def phase_derivative_isothermal_drag(ph: Phase, t: float):
+	drag_multiplier = np.exp(-ph.y/y0)
+	return phase_derivative_drag(ph, t, drag_multiplier)
+
+def phase_derivative_uniform_drag(ph: Phase, t: float):
+	return phase_derivative_drag(ph, t)
+
+def phase_derivative_adiabatic_drag(ph: Phase, t: float):
+	drag_multiplier = (1-6.5e-3*ph.y/T0)**alfa
+	return phase_derivative_drag(ph, t, drag_multiplier)
+
+def phase_prime_method(drag_type:Drag_type=Drag_type.NODRAG):
+	if drag_type is Drag_type.NODRAG: return phase_derivative_nodrag
+	elif drag_type is Drag_type.UNIFORM: return phase_derivative_uniform_drag
+	elif drag_type is Drag_type.ISOTHERMAL: return phase_derivative_isothermal_drag
+	elif drag_type is Drag_type.ADIABATIC: return phase_derivative_adiabatic_drag
+	else:
+		raise Exception("How did you get here?")
+
+
+class SYS:
+	phases: List[Phase]
+	distance: Union[None, float]
+	def __init__(self, init_phase:Phase, init_time:float=0,
+				 drag:float=False, drag_type:Drag_type=Drag_type.NODRAG):
+		self.phases = [init_phase]
+		self.times = [init_time]
+		self.distance = None
+
+		self.prop_method = phase_prime_method(drag_type)
+
+	def propagate_until_crash(self, y_floor:float):
+		while True:
+			current_phase = self.phases[-1]
+			t = self.times[-1]
+			next_phase, t_next = RK4(self.prop_method, current_phase, t, dt)
+			if (x_cross := crossing(current_phase, next_phase, y_floor)) is False:
+				self.phases.append(next_phase)
+				self.times.append(t_next)
+				continue
+			#print(f"CROSSED AT {x_cross=}")
+			self.distance = x_cross
+			break
+
+
+
+
+if __name__ == "__main__":
+	dt = 1e-1
+	init_phase = Phase(0,10,700,700)
+	for drag_type in [Drag_type.UNIFORM,
+					  Drag_type.ISOTHERMAL, Drag_type.ADIABATIC]:
+		sys = SYS(init_phase, 0, drag_type=drag_type)
+		sys.propagate_until_crash(y_floor=0)
+		phase_array = np.array(sys.phases)
+		plt.plot(phase_array[:,0], phase_array[:,1], label=drag_type.name)
+	plt.legend()
 	plt.show()
