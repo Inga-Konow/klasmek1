@@ -7,7 +7,7 @@ from enum import Enum
 #Constants and parameters:
 
 v_0 = 700  # firing velocity in m/s
-theta = 45  # firing angle in degrees
+theta = 30  # firing angle in degrees
 
 a = 6.5e-3  # constant in adiabatic approximation?
 T0 = 288
@@ -114,16 +114,16 @@ def phase_prime_method(drag_type:Drag_type=Drag_type.NODRAG):
 
 class SYS:
 	phases: List[Phase]
-	distance: Union[None, float]
+	crash_distance: Union[None, float]
 	def __init__(self, init_phase:Phase, init_time:float=0,
-				 drag:float=False, drag_type:Drag_type=Drag_type.NODRAG):
+				 drag_type:Drag_type=Drag_type.NODRAG):
 		self.phases = [init_phase]
 		self.times = [init_time]
-		self.distance = None
+		self.crash_distance = None
 
 		self.prop_method = phase_prime_method(drag_type)
 
-	def propagate_until_crash(self, y_floor:float):
+	def propagate_until_crash(self, y_floor:float, dt=1):
 		while True:
 			current_phase = self.phases[-1]
 			t = self.times[-1]
@@ -132,21 +132,10 @@ class SYS:
 				self.phases.append(next_phase)
 				self.times.append(t_next)
 				continue
-			#print(f"CROSSED AT {x_cross=}")
-			self.distance = x_cross
+			self.crash_distance = x_cross
 			break
 
 
+def polar_to_cartesian(abs_val: float, theta: float):
+	return abs_val*np.cos(theta), abs_val*np.sin(theta)
 
-
-if __name__ == "__main__":
-	dt = 1e-1
-	init_phase = Phase(0,10,700,700)
-	for drag_type in [Drag_type.UNIFORM,
-					  Drag_type.ISOTHERMAL, Drag_type.ADIABATIC]:
-		sys = SYS(init_phase, 0, drag_type=drag_type)
-		sys.propagate_until_crash(y_floor=0)
-		phase_array = np.array(sys.phases)
-		plt.plot(phase_array[:,0], phase_array[:,1], label=drag_type.name)
-	plt.legend()
-	plt.show()
