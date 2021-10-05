@@ -27,7 +27,7 @@ if __name__=="__main__":
     initial_phase = Phase(0, 0, *polar_to_cartesian(v, np.pi/4))
     for drag_type in [Drag_type.UNIFORM, Drag_type.ISOTHERMAL, Drag_type.ADIABATIC]:
         launch = SYS(initial_phase, drag_type=drag_type)
-        launch.propagate_until_crash(y_floor=0, dt=1e-3)
+        launch.propagate_until_crash(y_floor=0, dt=1e-1)
         phases = launch.phases
         xs, ys, vxs, vys = np.array(phases).T
         ax.plot(xs, ys, label=drag_type.value)
